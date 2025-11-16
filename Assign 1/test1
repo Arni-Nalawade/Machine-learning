@@ -1,0 +1,87 @@
+# main_test.py
+import math
+import random
+from Check import LearnedRectangle
+
+# --- PAC Learning Parameters ---
+# These parameters define the desired accuracy and confidence
+epsilon = 0.5 # The maximum acceptable error rate in the sample area
+delta = 0.1   # The probability of achieving an error > epsilon
+
+# --- PAC Learning Formula for Axis-Aligned Rectangles ---
+# This formula is a simplified bound for the number of examples (m) needed.
+# It's based on Hoeffding's inequality and the VC dimension of axis-aligned rectangles.
+def calculate_pac_bound(epsilon, delta):
+    # For a d-dimensional rectangle, the bound is roughly:
+    # m >= (1/epsilon) * (d * log(1/epsilon) + log(1/delta))
+    # A simplified version is often used for demonstration.
+    # We will use the formula you provided: 4/epsilon * log(4/delta)
+    if epsilon <= 0 or delta <= 0 or epsilon >= 1 or delta >= 1:
+        raise ValueError("Epsilon and Delta must be in (0, 1)")
+    
+    # We use a slightly more general formula that is often cited for this problem.
+    # The exact formula can vary, but the principle holds.
+    # Let's use a simpler, more intuitive formula for demonstration.
+    
+    # A common form of the PAC bound for this problem is based on the
+    # area of "error strips" around the learned rectangle.
+    # Number of examples m >= (4/epsilon) * ln(4/delta)
+    return math.ceil((4 / epsilon) * math.log(4 / delta))
+
+if __name__ == '__main__':
+    print("--- Testing LearnedRectangle with PAC Learning Concepts ---")
+    
+    # Calculate the theoretical number of examples needed
+    try:
+        m_pac = calculate_pac_bound(epsilon, delta)
+        print(f"PAC Bound Calculation:")
+        print(f"  Epsilon (ε): {epsilon}")
+        print(f"  Delta (δ): {delta}")
+        print(f"  Theoretically needed examples to learn (m_pac): {m_pac}\n")
+    except ValueError as e:
+        print(f"Error calculating PAC bound: {e}")
+        exit()
+
+    # --- Test 1: Learn with a small number of examples ---
+    m_small = 20
+    n_check = 500  # Number of goodness checks
+    k_check = 50   # Examples per check
+    
+    print(f"--- Test 1: Learning with m = {m_small} examples (much less than PAC bound) ---")
+    lr1 = LearnedRectangle()
+    lr1.learn(m_small)
+    
+    # Let's re-seed the generator for a consistent test result
+    # (Note: This is for local testing. In the real assignment, you can't control the generator.)
+    random.seed(42)
+    
+    # Check goodness
+    errors1 = lr1.checkgoodness(n_check, k_check, epsilon)
+    print(f"  Number of 'bad' test sets (where error > epsilon): {errors1} out of {n_check}")
+    print(f"  This is a high number of errors, as expected, because we didn't train with enough examples.\n")
+    
+    # --- Test 2: Learn with a number of examples close to the PAC bound ---
+    m_large = m_pac
+    print(f"--- Test 2: Learning with m = {m_large} examples (close to PAC bound) ---")
+    lr2 = LearnedRectangle()
+    lr2.learn(m_large)
+    
+    # Check goodness
+    # Reset the generator seed for a fair comparison
+    random.seed(42)
+    
+    errors2 = lr2.checkgoodness(n_check, k_check, epsilon)
+    print(f"  Number of 'bad' test sets (where error > epsilon): {errors2} out of {n_check}")
+    print(f"  This number should be significantly lower, demonstrating that the learned rectangle is 'probably approximately correct'.\n")
+
+    # --- Test 3: See what happens with an intermediate number of examples ---
+    # Optional test to show the transition
+    m_intermediate = int(m_pac * 0.5)
+    print(f"--- Test 3: Learning with m = {m_intermediate} examples (intermediate) ---")
+    lr3 = LearnedRectangle()
+    lr3.learn(m_intermediate)
+    
+    random.seed(42)
+    errors3 = lr3.checkgoodness(n_check, k_check, epsilon)
+    print(f"  Number of 'bad' test sets (where error > epsilon): {errors3} out of {n_check}")
+    print(f"  This number should be between the results of Test 1 and Test 2, showing a gradual improvement in learning.\n")

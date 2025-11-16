@@ -1,0 +1,7 @@
+epsilon = 0.1 #The sample area
+delta = 0.2 #probability of achieving the epsilon in sample area
+
+then the number of examples needed to learn = 4/epsilon*math.log(4/delta)
+say the number happens to be 120 examples needed
+then if we check goodness with l.checkgoodness(500,500,epsilon) while doing l.learn(20) we will get a lot of errors. 
+Need to check with more and less examples and see if the number of mistakes decreases near the m value.
